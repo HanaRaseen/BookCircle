@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>BookCircle — Read, Grow, Reflect | Reading Community</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #FEF9F0 0%, #FDF5E8 100%); color: #3E2A1F; line-height: 1.5; min-height: 100vh; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .auth-modal { background: #FFFFFF; border-radius: 48px; padding: 2.5rem; max-width: 450px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); animation: modalSlideIn 0.4s ease; }
+        @keyframes modalSlideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .logo-circle { width: 80px; height: 80px; background: radial-gradient(circle at 30% 30%, #EADBC6, #D9C3A0); border-radius: 50%; margin: 0 auto 1rem auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .logo-circle i { font-size: 3rem; color: #5C3E2A; }
+        .auth-tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #F0E5D8; }
+        .auth-tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; font-weight: 600; color: #9B7A56; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .auth-tab.active { color: #C7A46B; border-bottom-color: #C7A46B; }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; animation: fadeIn 0.3s ease; }
+        .auth-form input { width: 100%; padding: 14px 18px; margin-bottom: 1rem; border: 1.5px solid #E6D5BE; border-radius: 40px; font-family: 'Inter', sans-serif; font-size: 1rem; }
+        .auth-form input:focus { outline: none; border-color: #C7A46B; }
+        .auth-btn { width: 100%; background: #C7A46B; color: white; border: none; padding: 14px; border-radius: 40px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+        .auth-btn:hover { background: #B2824A; transform: translateY(-2px); }
+        .main-app { display: none; }
+        .main-app.visible { display: block; }
+        h1 { font-size: 3.2rem; font-weight: 800; background: linear-gradient(135deg, #5C3E2A, #9B7A56); -webkit-background-clip: text; background-clip: text; color: transparent;text-align: center; }
+        h2 { font-size: 2rem; margin-bottom: 1.5rem; border-left: 5px solid #C7A46B; padding-left: 1rem; font-weight: 700; }
+        .programs-grid { display: flex; flex-wrap: wrap; gap: 2rem; margin: 2rem 0; }
+        .program-card { flex: 1; min-width: 220px; padding: 2rem 1.5rem; text-align: center; cursor: pointer; background: #FFFFFF; border-radius: 28px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); transition: all 0.3s ease; border: 1px solid #F3E9DC; }
+        .program-card:hover { transform: translateY(-6px); border-color: #C7A46B; }
+        .program-card i { font-size: 2.4rem; color: #B2824A; margin-bottom: 1rem; }
+        .program-card h3 { font-size: 1.4rem; margin-bottom: 0.75rem; }
+        .menu-btn { position: fixed; top: 28px; left: 28px; z-index: 1000; background: #FEF6EA; border: none; font-size: 1.8rem; cursor: pointer; color: #5C3E2A; width: 52px; height: 52px; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .side-panel { position: fixed; top: 0; left: -340px; width: 320px; height: 100%; background: #FFFBF5; z-index: 1001; box-shadow: 4px 0 24px rgba(0,0,0,0.08); padding: 2rem 1.8rem; transition: left 0.35s ease; border-right: 1px solid #EDE2D2; }
+        .side-panel.open { left: 0; }
+        .side-panel ul { list-style: none; margin-top: 3rem; }
+        .side-panel li { margin: 1.8rem 0; }
+        .side-panel a { text-decoration: none; font-size: 1.2rem; font-weight: 500; color: #3E2A1F; cursor: pointer; display: block; }
+        .side-panel a:hover { color: #B2824A; padding-left: 8px; }
+        .close-panel { background: none; border: none; font-size: 1.8rem; float: right; cursor: pointer; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 1000; display: none; }
+        .btn-primary { background: #D9B48B; border: none; padding: 12px 28px; border-radius: 60px; font-weight: 600; cursor: pointer; }
+        .books-explore-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; margin: 1.5rem 0; }
+        .explore-book-card { background: #FFFFFF; border-radius: 24px; padding: 1rem; border: 1px solid #F3E9DC; transition: all 0.3s; }
+        .explore-book-card:hover { transform: translateY(-4px); border-color: #C7A46B; }
+        .explore-book-cover { width: 100%; height: 220px; object-fit: cover; border-radius: 16px; margin-bottom: 0.75rem; }
+        .book-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+        .book-action-btn { flex: 1; padding: 6px 8px; border-radius: 20px; border: none; font-size: 0.7rem; cursor: pointer; font-weight: 500; }
+        .action-reading { background: #C7A46B; color: white; }
+        .action-tbr { background: #E5D5BE; color: #5C3E2A; }
+        .action-favorite { background: #FFD966; color: #5C3E2A; }
+        .load-more-btn { text-align: center; margin: 2rem 0; }
+        .community-grid, .books-grid, .tracker-stats { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 1.5rem 0; }
+        .member-card, .book-item, .stat-box { background: #FFFFFF; border-radius: 24px; padding: 1.5rem; border: 1px solid #F3E9DC; transition: all 0.3s; }
+        .member-card { width: 260px; }
+        .member-avatar { width: 70px; height: 70px; background: #D9C3A0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; margin: 0 auto 1rem; }
+        .book-cover-img { width: 100%; height: 160px; object-fit: cover; border-radius: 16px; }
+        .heart-btn { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #9B7A56; }
+        .heart-btn:hover { color: #e74c3c; }
+        .star-rating { color: #FFD700; }
+        .progress-bar-container { background: #E5D5BE; border-radius: 30px; height: 10px; overflow: hidden; }
+        .progress-fill { background: #C7A46B; height: 100%; }
+        .event-box { background: #FDF6EC; border-radius: 32px; padding: 2rem; text-align: center; margin: 2rem 0; }
+        .coming-soon-grid { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 2rem 0; }
+        .coming-block { flex: 1; background: #FFFBF5; border-radius: 28px; padding: 1.8rem; text-align: center; border: 1px solid #EADBC6; }
+        .back-button { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 2rem; cursor: pointer; color: #9B7A56; }
+        footer { text-align: center; padding: 2rem 0; color: #9B7A56; border-top: 1px solid #EDE2D2; margin-top: 3rem; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .page-transition { animation: fadeIn 0.4s ease; }
+        .welcome-text { font-size: 1.1rem; max-width: 700px; margin: 1rem auto; color: #5B3F2A; text-align: center; }
+        .genre-badge { display: inline-block; background: #F0E5D8; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; margin-top: 6px; }
+        .error-message { color: #e74c3c; font-size: 0.8rem; text-align: center; margin-top: -0.5rem; margin-bottom: 1rem; }
+        .hero-img { width: 100%; height: 280px; background: linear-gradient(135deg, #EADBC6, #D9C3A0); border-radius: 40px; margin: 2rem 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #5C3E2A; }
+        .load-more { background: #F0E5D8; border: none; padding: 12px 24px; border-radius: 40px; cursor: pointer; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<!-- Auth Modal -->
+<div id="authOverlay" class="auth-overlay">
+    <div class="auth-modal">
+        <div class="logo-circle"><i class="fas fa-book-open"></i></div>
+        <h2 style="text-align: center; margin-bottom: 1rem; border: none;">Welcome to BookCircle</h2>
+        <p style="text-align: center; color: #9B7A56; margin-bottom: 2rem;">Your reading community awaits</p>
+        <div class="auth-tabs">
+            <div class="auth-tab active" data-tab="signin">Sign In</div>
+            <div class="auth-tab" data-tab="signup">Sign Up</div>
+        </div>
+        <div id="signinForm" class="auth-form active">
+            <input type="text" id="loginUsername" placeholder="Username (try: Hana or Ashikha or demo)">
+            <input type="password" id="loginPassword" placeholder="Password (try: hana123 or ashi123 or demo123)">
+            <div id="loginError" class="error-message"></div>
+            <button class="auth-btn" id="signinBtn">Sign In</button>
+        </div>
+        <div id="signupForm" class="auth-form">
+            <input type="text" id="signupUsername" placeholder="Username">
+            <input type="password" id="signupPassword" placeholder="Password">
+            <input type="password" id="signupConfirmPassword" placeholder="Confirm Password">
+            <div id="signupError" class="error-message"></div>
+            <button class="auth-btn" id="signupBtn">Create Account</button>
+        </div>
+    </div>
+</div>
+
+<!-- Main App -->
+<div id="mainApp" class="main-app">
+    <button class="menu-btn" id="menuToggleBtn"><i class="fas fa-bars"></i></button>
+    <div class="side-panel" id="sidePanel">
+        <button class="close-panel" id="closePanelBtn"><i class="fas fa-times"></i></button>
+        <ul>
+            <li><a id="navHome">Home</a></li>
+            <li><a id="navAbout">About Us</a></li>
+            <li><a id="navContact">Contact Us</a></li>
+            <li><a id="navLogout">Logout</a></li>
+        </ul>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div id="mainContainer" class="container"></div>
+    <footer><div class="container"><p>📖 BookCircle — where stories weave us together. © 2025</p></div></footer>
+</div>
+
+<script>
+    // ==================== DATA ====================
+    let currentUser = null;
+    let chartInstance = null;
+    let suggestedBooks = JSON.parse(localStorage.getItem('suggestedBooks') || '[]');
+    
+    // Default users for demo
+    let users = [
+        { username: "Hana", password: "hana123" },
+        { username: "Ashikha", password: "ashi123" },
+        { username: "demo", password: "demo123" }
+    ];
+    
+    // Load saved users from localStorage
+    let savedUsers = localStorage.getItem('bookcircle_users');
+    if(savedUsers) {
+        users = JSON.parse(savedUsers);
+    } else {
+        localStorage.setItem('bookcircle_users', JSON.stringify(users));
+    }
+    
+    // Book Database
+    const bookDatabase = [
+        { id: 1, title: "Project Hail Mary", cover: "https://covers.openlibrary.org/b/isbn/9780593135204-M.jpg", pages: 496, author: "Andy Weir", genre: "Sci-Fi", year: 2021 },
+        { id: 2, title: "Atomic Habits", cover: "https://covers.openlibrary.org/b/isbn/9780735211292-M.jpg", pages: 320, author: "James Clear", genre: "Self-Help", year: 2018 },
+        { id: 3, title: "Circe", cover: "https://covers.openlibrary.org/b/isbn/9780316556347-M.jpg", pages: 393, author: "Madeline Miller", genre: "Fantasy", year: 2018 },
+        { id: 4, title: "Sapiens", cover: "https://covers.openlibrary.org/b/isbn/9780062316097-M.jpg", pages: 443, author: "Yuval Noah Harari", genre: "Non-Fiction", year: 2015 },
+        { id: 5, title: "The Midnight Library", cover: "https://covers.openlibrary.org/b/isbn/9780525559474-M.jpg", pages: 288, author: "Matt Haig", genre: "Fiction", year: 2020 },
+        { id: 6, title: "Dune", cover: "https://covers.openlibrary.org/b/isbn/9780441013593-M.jpg", pages: 896, author: "Frank Herbert", genre: "Sci-Fi", year: 1965 },
+        { id: 7, title: "Becoming", cover: "https://covers.openlibrary.org/b/isbn/9781524763138-M.jpg", pages: 448, author: "Michelle Obama", genre: "Biography", year: 2018 },
+        { id: 8, title: "The Silent Patient", cover: "https://covers.openlibrary.org/b/isbn/9781250301697-M.jpg", pages: 336, author: "Alex Michaelides", genre: "Thriller", year: 2019 },
+        { id: 9, title: "Where the Crawdads Sing", cover: "https://covers.openlibrary.org/b/isbn/9780735219090-M.jpg", pages: 384, author: "Delia Owens", genre: "Fiction", year: 2018 },
+        { id: 10, title: "Educated", cover: "https://covers.openlibrary.org/b/isbn/9780399590504-M.jpg", pages: 352, author: "Tara Westover", genre: "Memoir", year: 2018 }
+    ];
+    
+    let displayedBooks = 9;
+    let allBooks = [...bookDatabase];
+    
+    // User's personal bookshelf
+    let userBooks = [
+        { id: 1, title: "Project Hail Mary", cover: "https://covers.openlibrary.org/b/isbn/9780593135204-M.jpg", status: "Reading", genre: "Sci-Fi", pages: 496, author: "Andy Weir" },
+        { id: 2, title: "Atomic Habits", cover: "https://covers.openlibrary.org/b/isbn/9780735211292-M.jpg", status: "Completed", genre: "Self-Help", pages: 320, author: "James Clear" },
+        { id: 5, title: "The Midnight Library", cover: "https://covers.openlibrary.org/b/isbn/9780525559474-M.jpg", status: "Completed", genre: "Fiction", pages: 288, author: "Matt Haig" },
+        { id: 3, title: "Circe", cover: "https://covers.openlibrary.org/b/isbn/9780316556347-M.jpg", status: "TBR", genre: "Fantasy", pages: 393, author: "Madeline Miller" }
+    ];
+    
+    let communityMembers = [
+        { name: "Hana Raseen", avatar: "HR", book: "The Midnight Library", cover: "https://covers.openlibrary.org/b/isbn/9780525559474-M.jpg", pages: 288, author: "Matt Haig" },
+        { name: "Ashikha Rini", avatar: "AR", book: "Atomic Habits", cover: "https://covers.openlibrary.org/b/isbn/9780735211292-M.jpg", pages: 320, author: "James Clear" },
+        { name: "Leila M.", avatar: "LM", book: "Dune", cover: "https://covers.openlibrary.org/b/isbn/9780441013593-M.jpg", pages: 896, author: "Frank Herbert" },
+        { name: "Omar K.", avatar: "OK", book: "Becoming", cover: "https://covers.openlibrary.org/b/isbn/9781524763138-M.jpg", pages: 448, author: "Michelle Obama" }
+    ];
+    
+    let blogPosts = [
+        { username: "Hana Raseen", avatar: "HR", review: "The Midnight Library is a profound exploration of regret and possibility. Every chapter made me reflect on my life choices.", date: "Mar 12, 2025", rating: 5, bookTitle: "The Midnight Library" },
+        { username: "Ashikha Rini", avatar: "AR", review: "Atomic Habits completely changed my approach to personal development. The concept of 1% improvement daily is revolutionary.", date: "Mar 10, 2025", rating: 5, bookTitle: "Atomic Habits" },
+        { username: "Rayan W.", avatar: "RW", review: "Dune is an epic masterpiece. The world-building and philosophical depth make it timeless.", date: "Mar 5, 2025", rating: 5, bookTitle: "Dune" }
+    ];
+    
+    let yearlyReadCount = 8;
+    
+    // ==================== AUTH FUNCTIONS ====================
+    function signUp(username, password, confirmPassword) {
+        if(!username || username.length < 3) return "Username must be at least 3 characters";
+        if(!password || password.length < 4) return "Password must be at least 4 characters";
+        if(password !== confirmPassword) return "Passwords do not match";
+        if(users.find(u => u.username === username)) return "Username already exists";
+        
+        users.push({ username, password });
+        localStorage.setItem('bookcircle_users', JSON.stringify(users));
+        return "success";
+    }
+    
+    function signIn(username, password) {
+        let user = users.find(u => u.username === username && u.password === password);
+        if(user) {
+            currentUser = user;
+            localStorage.setItem('bookcircle_currentUser', JSON.stringify(user));
+            return true;
+        }
+        return false;
+    }
+    
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('bookcircle_currentUser');
+        document.getElementById("authOverlay").style.display = "flex";
+        document.getElementById("mainApp").classList.remove("visible");
+    }
+    
+    // ==================== BOOK FUNCTIONS ====================
+    function updateBookStatus(bookId, newStatus) {
+        let book = userBooks.find(b => b.id === bookId);
+        if(book) { book.status = newStatus; renderTrackerPage(); }
+    }
+    
+    function addToLibrary(book, action) {
+        let existing = userBooks.find(b => b.id === book.id);
+        if(existing) {
+            existing.status = action === 'favorite' ? existing.status : action;
+        } else {
+            userBooks.push({ ...book, status: action === 'favorite' ? 'TBR' : action });
+        }
+        alert(`"${book.title}" added to ${action === 'reading' ? 'Currently Reading' : action === 'tbr' ? 'TBR List' : 'Favorites'}!`);
+        renderExplorePage();
+    }
+    
+    function addToSuggestions(bookTitle) {
+        if(!suggestedBooks.includes(bookTitle)) {
+            suggestedBooks.push(bookTitle);
+            localStorage.setItem('suggestedBooks', JSON.stringify(suggestedBooks));
+            alert(`"${bookTitle}" added to your suggestions!`);
+        } else {
+            alert(`"${bookTitle}" is already in your suggestions.`);
+        }
+    }
+    
+    function loadMoreBooks() {
+        displayedBooks += 6;
+        renderExplorePage();
+    }
+    
+    function addBlogPost() {
+        let reviewText = document.getElementById("newReviewText");
+        let bookTitle = document.getElementById("newBookTitle");
+        let rating = document.getElementById("newRating")?.value;
+        if(reviewText && reviewText.value.trim()) {
+            let newPost = {
+                username: currentUser?.username || "Reader",
+                avatar: currentUser?.username ? currentUser.username.slice(0,2).toUpperCase() : "RD",
+                review: reviewText.value,
+                date: new Date().toLocaleDateString(),
+                rating: parseInt(rating) || 4,
+                bookTitle: bookTitle?.value || "Recent Read"
+            };
+            blogPosts.unshift(newPost);
+            reviewText.value = "";
+            if(bookTitle) bookTitle.value = "";
+            renderBlogsPage();
+        } else { alert("Please write a reflection first"); }
+    }
+    
+    // ==================== PAGE RENDERS ====================
+    function renderHome() {
+        let container = document.getElementById("mainContainer");
+        container.innerHTML = `
+            <div class="hero-section page-transition">
+                <div class="logo-circle"><i class="fas fa-book-open"></i></div>
+                <h1>BookCircle</h1>
+                <p class="welcome-text">
+                    Hi, we are founders and best friends tied together by books, stories, 
+                    and endless conversations about stories. We designed this space for those who love to read, write, 
+                    track their journey, and grow through stories.
+                </p>
+                <p style="font-weight: 700; font-size: 1.2rem; text-align: center;">Your space to read, grow, and reflect</p>
+                <div class="hero-img">
+                    <i class="fas fa-users"></i>
+                    <p>Book Club Community</p>
+                </div>
+            </div>
+            
+            <h2>📖PROGRAMS</h2>
+            <div class="programs-grid">
+                <div class="program-card" data-program="readers">
+                    <i class="fas fa-users"></i>
+                    <h3>Readers & Current Reading</h3>
+                    <p>See community reads & update status</p>
+                </div>
+                <div class="program-card" data-program="blogs">
+                    <i class="fas fa-pen-fancy"></i>
+                    <h3>Blogs & Reading Reflections</h3>
+                    <p>Reviews & personal stories</p>
+                </div>
+                <div class="program-card" data-program="tracker">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Reading Tracker</h3>
+                    <p>Goals, stats, TBR, progress</p>
+                </div>
+                <div class="program-card" data-program="explore">
+                    <i class="fas fa-compass"></i>
+                    <h3>Explore Books</h3>
+                    <p>Discover new books to read</p>
+                </div>
+            </div>
+            
+            <div class="event-box">
+                <h3>📅 Ongoing Events: Reading Club</h3>
+                <p>Join our monthly read-along & discussions</p>
+                <a href="https://www.instagram.com/kutubcircle_" target="_blank">
+                    <button class="btn-primary"><i class="fab fa-instagram"></i> Visit Instagram</button>
+                </a>
+            </div>
+            <h3>COMING SOON</h3>
+            <div class="coming-soon-grid">
+                <div class="coming-block">
+                    <i class="fas fa-comments"></i>
+                    <h3>Book Discussions</h3>
+                    <p>Deep dive into literary masterpieces</p>
+                    <small>Coming April 2025</small>
+                </div>
+                <div class="coming-block">
+                    <i class="fas fa-pencil-ruler"></i>
+                    <h3>Writing Workshops</h3>
+                    <p>Creative writing sessions</p>
+                    <small>Coming May 2025</small>
+                </div>
+                <div class="coming-block">
+                    <i class="fas fa-microphone-alt"></i>
+                    <h3>Author AMAs</h3>
+                    <p>Ask Me Anything with writers</p>
+                    <small>Coming June 2025</small>
+                </div>
+            </div>
+        `;
+        
+        document.querySelectorAll(".program-card").forEach(card => {
+            card.addEventListener("click", () => {
+                let program = card.getAttribute("data-program");
+                if(program === "readers") renderReadersPage();
+                else if(program === "blogs") renderBlogsPage();
+                else if(program === "tracker") renderTrackerPage();
+                else if(program === "explore") renderExplorePage();
+            });
+        });
+    }
+    
+    function renderExplorePage() {
+        let container = document.getElementById("mainContainer");
+        let booksToShow = allBooks.slice(0, displayedBooks);
+        
+        container.innerHTML = `
+            <div class="page-transition">
+                <div class="back-button" onclick="renderHome()"><i class="fas fa-arrow-left"></i> Back to Home</div>
+                <h2> Explore Books</h2>
+                <p style="margin-bottom: 1.5rem; color: #9B7A56;">Discover new books, add them to your reading list!</p>
+                <div class="books-explore-grid">
+                    ${booksToShow.map(book => `
+                        <div class="explore-book-card">
+                            <img src="${book.cover}" class="explore-book-cover" alt="${book.title}" onerror="this.src='https://placehold.co/200x220/EADBC6/AA8764?text=${book.title.slice(0,2)}'">
+                            <h4>${book.title.length > 25 ? book.title.slice(0,22)+'...' : book.title}</h4>
+                            <div style="font-size: 0.8rem; color: #9B7A56;">${book.author}</div>
+                            <div style="font-size: 0.75rem;">📄 ${book.pages} pages | 📅 ${book.year}</div>
+                            <span class="genre-badge">${book.genre}</span>
+                            <div class="book-actions">
+                                <button class="book-action-btn action-reading" onclick='addToLibrary(${JSON.stringify(book).replace(/'/g, "\\'")}, "reading")'>📖 Reading</button>
+                                <button class="book-action-btn action-tbr" onclick='addToLibrary(${JSON.stringify(book).replace(/'/g, "\\'")}, "tbr")'>📋 TBR</button>
+                                <button class="book-action-btn action-favorite" onclick='addToLibrary(${JSON.stringify(book).replace(/'/g, "\\'")}, "favorite")'>❤️ Favorite</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${displayedBooks < allBooks.length ? `<div class="load-more-btn"><button class="load-more" onclick="loadMoreBooks()">Load More Books <i class="fas fa-arrow-down"></i></button></div>` : ''}
+            </div>
+        `;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    
+    function renderReadersPage() {
+        let container = document.getElementById("mainContainer");
+        container.innerHTML = `
+            <div class="page-transition">
+                <div class="back-button" onclick="renderHome()"><i class="fas fa-arrow-left"></i> Back to Home</div>
+                <h2>📖 Readers & Current Reading</h2>
+                <div class="community-grid">
+                    ${communityMembers.map(m => `
+                        <div class="member-card">
+                            <div class="member-avatar">${m.avatar}</div>
+                            <img src="${m.cover}" class="book-cover-img" alt="${m.book}" onerror="this.src='https://placehold.co/120x160/EADBC6/AA8764?text=${m.book.slice(0,2)}'">
+                            <h4>${m.name}</h4>
+                            <p><strong>${m.book}</strong><br><small>by ${m.author}</small></p>
+                            <p>📄 ${m.pages} pages</p>
+                            <button class="heart-btn" onclick="addToSuggestions('${m.book}')"><i class="far fa-heart"></i> Add to Suggestions</button>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="margin-top: 2rem; padding: 1.5rem; background: #FEF6EA; border-radius: 24px;">
+                    <h4>📚 Your Suggested Reading List</h4>
+                    <p>${suggestedBooks.length ? suggestedBooks.join(" · ") : "No suggestions yet. Click ❤️ on books you like!"}</p>
+                </div>
+            </div>
+        `;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    
+    function renderBlogsPage() {
+        let container = document.getElementById("mainContainer");
+        container.innerHTML = `
+            <div class="page-transition">
+                <div class="back-button" onclick="renderHome()"><i class="fas fa-arrow-left"></i> Back to Home</div>
+                <h2>📝 Blogs & Reading Reflections</h2>
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    ${blogPosts.map(post => `
+                        <div style="background: white; padding: 1.5rem; border-radius: 24px; border: 1px solid #F3E9DC;">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                                <div style="width: 50px; height: 50px; background: #D9C3A0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">${post.avatar}</div>
+                                <div><strong>${post.username}</strong><div style="font-size: 0.8rem; color: #9B7A56;">${post.date}</div></div>
+                            </div>
+                            <div class="star-rating">${'★'.repeat(post.rating)}${'☆'.repeat(5-post.rating)}</div>
+                            <h4>📘 ${post.bookTitle}</h4>
+                            <p style="margin-top: 0.5rem;">${post.review}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="margin-top: 2rem; padding: 1.5rem; background: #FEF6EA; border-radius: 24px;">
+                    <h4>Share Your Reflection</h4>
+                    <input type="text" id="newBookTitle" placeholder="Book title" style="width: 100%; margin-bottom: 1rem; padding: 12px; border-radius: 40px; border: 1px solid #E6D5BE;">
+                    <select id="newRating" style="width: 100%; margin-bottom: 1rem; padding: 12px; border-radius: 40px; border: 1px solid #E6D5BE;">
+                        <option value="5">★★★★★ (5/5)</option><option value="4">★★★★☆ (4/5)</option><option value="3">★★★☆☆ (3/5)</option><option value="2">★★☆☆☆ (2/5)</option><option value="1">★☆☆☆☆ (1/5)</option>
+                    </select>
+                    <textarea id="newReviewText" rows="3" placeholder="Write your review..." style="width: 100%; border-radius: 20px; border: 1px solid #E6D5BE; padding: 12px;"></textarea>
+                    <button class="btn-primary" onclick="addBlogPost()" style="margin-top: 1rem;">Publish Reflection</button>
+                </div>
+            </div>
+        `;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    
+    function renderTrackerPage() {
+        let container = document.getElementById("mainContainer");
+        let currentReading = userBooks.find(b => b.status === "Reading");
+        let completedCount = userBooks.filter(b => b.status === "Completed").length;
+        let yearlyGoal = 30;
+        let yearlyPercent = (yearlyReadCount / yearlyGoal) * 100;
+        
+        let genreData = {
+            "Fiction": userBooks.filter(b => b.status === "Completed" && b.genre === "Fiction").length,
+            "Non-Fiction": userBooks.filter(b => b.status === "Completed" && b.genre === "Non-Fiction").length,
+            "Fantasy": userBooks.filter(b => b.status === "Completed" && b.genre === "Fantasy").length,
+            "Self-Help": userBooks.filter(b => b.status === "Completed" && b.genre === "Self-Help").length,
+            "Sci-Fi": userBooks.filter(b => b.status === "Completed" && b.genre === "Sci-Fi").length
+        };
+        
+        container.innerHTML = `
+            <div class="page-transition">
+                <div class="back-button" onclick="renderHome()"><i class="fas fa-arrow-left"></i> Back to Home</div>
+                <h2>📊 Reading Tracker</h2>
+                <div class="tracker-stats">
+                    <div class="stat-box"><h4>📅 Yearly Goal</h4><div class="progress-bar-container"><div class="progress-fill" style="width: ${yearlyPercent}%"></div></div><p>${yearlyReadCount}/${yearlyGoal} books</p></div>
+                    <div class="stat-box"><h4>📚 Completed</h4><div style="font-size: 2rem; font-weight: bold;">${completedCount}</div><p>books finished</p></div>
+                    <div class="stat-box"><h4>📖 Currently Reading</h4><p style="font-size: 1.2rem;">${currentReading ? currentReading.title + " " + currentReading.cover : "No active book"}</p></div>
+                </div>
+                <h3>📚 My Bookshelf</h3>
+                <div class="books-grid">
+                    ${userBooks.map(book => `
+                        <div class="book-item" style="width: 180px;">
+                            <img src="${book.cover}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 16px;" onerror="this.src='https://placehold.co/120x160/EADBC6/AA8764?text=${book.title.slice(0,2)}'">
+                            <strong>${book.title.length > 18 ? book.title.slice(0,15)+'...' : book.title}</strong>
+                            <div style="font-size: 0.8rem; color: #9B7A56;">${book.author}</div>
+                            <select class="status-select" data-id="${book.id}" style="margin-top: 8px; padding: 6px; border-radius: 20px; width: 100%;">
+                                <option value="Reading" ${book.status === "Reading" ? "selected" : ""}>📖 Reading</option>
+                                <option value="Completed" ${book.status === "Completed" ? "selected" : ""}>✅ Completed</option>
+                                <option value="TBR" ${book.status === "TBR" ? "selected" : ""}>📋 TBR</option>
+                            </select>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="margin-top: 1.5rem; padding: 1.5rem; background: #FEF6EA; border-radius: 24px;">
+                    <h4>📋 TBR List</h4>
+                    <p>${userBooks.filter(b => b.status === "TBR").map(b => b.title).join(" · ") || "No books in TBR"}</p>
+                </div>
+                <div style="margin-top: 1rem; padding: 1.5rem; background: #FEF6EA; border-radius: 24px;">
+                    <h4>📊 Genre Statistics</h4>
+                    <canvas id="genreChart" style="max-height: 220px;"></canvas>
+                </div>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            let ctx = document.getElementById("genreChart");
+            if(ctx) {
+                if(chartInstance) chartInstance.destroy();
+                chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ["Fiction", "Non-Fiction", "Fantasy", "Self-Help", "Sci-Fi"],
+                        datasets: [{
+                            data: [genreData.Fiction, genreData["Non-Fiction"], genreData.Fantasy, genreData["Self-Help"], genreData["Sci-Fi"]],
+                            backgroundColor: ['#D9B48B', '#C7A46B', '#B2824A', '#9B7A56', '#EADBC6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+        }, 100);
+        
+        document.querySelectorAll(".status-select").forEach(select => {
+            select.addEventListener("change", (e) => {
+                let bookId = parseInt(select.getAttribute("data-id"));
+                updateBookStatus(bookId, select.value);
+            });
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    
+    function renderAbout() {
+        let container = document.getElementById("mainContainer");
+        container.innerHTML = `
+            <div class="page-transition">
+                <div class="back-button" onclick="renderHome()"><i class="fas fa-arrow-left"></i> Back to Home</div>
+                <h2>✨ About BookCircle</h2>
+                <div style="background: white; padding: 2rem; border-radius: 32px; border: 1px solid #F3E9DC;">
+                    <p style="font-size: 1.1rem; line-height: 1.8;">Founded by best friends <strong>Hana Raseen</strong> and <strong>Ashikha Rini</strong>, our mission is to build a sanctuary for readers and writers — to nurture literary growth, creative expression, and meaningful discussions.</p>
+                    <p style="margin-top: 1.5rem;"><strong>📖 Vision:</strong> A world where every story finds its reader, and every reader finds their voice.</p>
+                    <p style="margin-top: 1rem;"><strong>💡 Mission:</strong> Create a thriving community that improves reading habits, writing skills, and literary knowledge.</p>
+                </div>
+            </div>
+        `;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    
+    function renderContact() {
+        let container = document.getElementById("mainContainer");
+        container.innerHTML = `
+            <div class="page-transition">
+                <div class="back-button" onclick="renderHome()"><i class="fas fa-arrow-left"></i> Back to Home</div>
+                <h2>📧 Contact Us</h2>
+                <div style="background: white; padding: 2rem; border-radius: 32px; border: 1px solid #F3E9DC;">
+                    <p><i class="fab fa-instagram"></i> <strong>Instagram:</strong> <a href="https://www.instagram.com/kutubcircle_" target="_blank" style="color: #B2824A;">@bookcircle</a></p>
+                    <p style="margin-top: 1rem;"><i class="fas fa-envelope"></i> <strong>Email:</strong> bookcircle78@gmail.com</p>
+                    <p style="margin-top: 1rem;">We'd love to hear your thoughts and book recommendations!</p>
+                </div>
+            </div>
+        `;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    
+    // ==================== MENU FUNCTIONS ====================
+    function closeSidePanel() {
+        document.getElementById("sidePanel").classList.remove("open");
+        document.getElementById("overlay").style.display = "none";
+    }
+    
+    function openSidePanel() {
+        document.getElementById("sidePanel").classList.add("open");
+        document.getElementById("overlay").style.display = "block";
+    }
+    
+    // Make functions global for onclick
+    window.renderHome = renderHome;
+    window.renderReadersPage = renderReadersPage;
+    window.renderBlogsPage = renderBlogsPage;
+    window.renderTrackerPage = renderTrackerPage;
+    window.renderExplorePage = renderExplorePage;
+    window.addToLibrary = addToLibrary;
+    window.addToSuggestions = addToSuggestions;
+    window.loadMoreBooks = loadMoreBooks;
+    window.addBlogPost = addBlogPost;
+    window.updateBookStatus = updateBookStatus;
+    
+    // ==================== AUTH EVENT LISTENERS ====================
+    // Tab switching
+    document.querySelectorAll(".auth-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+            document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
+            document.getElementById(tab.dataset.tab + "Form").classList.add("active");
+        });
+    });
+    
+    // Sign In button
+    document.getElementById("signinBtn").addEventListener("click", function () {
+        let username = document.getElementById("loginUsername").value;
+        let password = document.getElementById("loginPassword").value;
+        
+        let success = signIn(username, password);
+        
+        if (success) {
+            document.getElementById("authOverlay").style.display = "none";
+            document.getElementById("mainApp").classList.add("visible");
+            renderHome();
+        } else {
+            document.getElementById("loginError").innerText = "Invalid username or password";
+        }
+    });
+    
+    // Sign Up button
+    document.getElementById("signupBtn").addEventListener("click", function () {
+        let username = document.getElementById("signupUsername").value;
+        let password = document.getElementById("signupPassword").value;
+        let confirmPassword = document.getElementById("signupConfirmPassword").value;
+        
+        let result = signUp(username, password, confirmPassword);
+        
+        if (result === "success") {
+            document.getElementById("signupError").innerHTML = "✅ Account created! You can sign in now.";
+            document.getElementById("signupError").style.color = "#27ae60";
+            setTimeout(() => {
+                document.querySelector('[data-tab="signin"]').click();
+                document.getElementById("signupError").innerHTML = "";
+            }, 2000);
+        } else {
+            document.getElementById("signupError").innerText = result;
+        }
+    });
+    
+    // Auto login if user already logged in
+    window.onload = function () {
+        let savedUser = localStorage.getItem('bookcircle_currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            document.getElementById("authOverlay").style.display = "none";
+            document.getElementById("mainApp").classList.add("visible");
+            renderHome();
+        }
+    };
+    
+    // Menu event listeners
+    document.getElementById("menuToggleBtn").addEventListener("click", openSidePanel);
+    document.getElementById("closePanelBtn").addEventListener("click", closeSidePanel);
+    document.getElementById("overlay").addEventListener("click", closeSidePanel);
+    document.getElementById("navHome").addEventListener("click", () => { renderHome(); closeSidePanel(); });
+    document.getElementById("navAbout").addEventListener("click", () => { renderAbout(); closeSidePanel(); });
+    document.getElementById("navContact").addEventListener("click", () => { renderContact(); closeSidePanel(); });
+    document.getElementById("navLogout").addEventListener("click", () => { logout(); closeSidePanel(); });
+</script>
+</body>
+</html>
